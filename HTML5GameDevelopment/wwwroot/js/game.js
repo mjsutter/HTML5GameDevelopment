@@ -40,8 +40,7 @@ class GameData {
     }
 
     isGameWin() {
-        //TODO
-        return false;
+        return (this.currentNumber > this.amountOfBox);
     }
 }
 
@@ -55,11 +54,11 @@ class Game {
         this.stage.width = this.canvas.width;
         this.stage.height = this.canvas.height;
 
-        //enable retina screen
-        this.retinalize();
-
         //enable touch support
         createjs.Touch.enable(this.stage);
+
+        //enable retina screen
+        this.retinalize();
 
         createjs.Ticker.setFPS(60);
 
@@ -68,14 +67,18 @@ class Game {
         //keep redrawing the stage
         createjs.Ticker.on("tick", this.stage);
 
-        //add background 
-        this.stage.addChild(new lib.Background());
-
-        this.generateBoxes(10);
+        this.restartGame();
     }
 
     version() {
         return '1.0.0';
+    }
+
+    restartGame() {
+        this.gameData.resetData();
+        this.stage.removeAllChildren();
+        this.stage.addChild(new lib.Background());
+        this.generateBoxes(this.gameData.amountOfBox);
     }
 
     generateBoxes(amount = 10) {
@@ -93,6 +96,16 @@ class Game {
         if (this.gameData.isRightNumber(numberedBox.number)) {
             this.stage.removeChild(numberedBox);
             this.gameData.nextNumber();
+
+            // is game over?
+            if (this.gameData.isGameWin()) {
+                var gameOverView = new lib.GameOverView();
+                this.stage.addChild(gameOverView);
+
+                gameOverView.restartButton.on('click', (function () {
+                    this.restartGame();
+                }).bind(this));
+            }
         }
     }
     retinalize() {
